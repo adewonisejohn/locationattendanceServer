@@ -7,7 +7,8 @@ async function createDefaultAdmin() {
       const defaultAdmin = {
         full_name: 'admin',
         password: 'password',
-        location: [0, 0]
+        location: [0, 0],
+        attendance_in_progress : false
       };
       await adminModel.create(defaultAdmin);
       console.log('Default admin created successfully.');

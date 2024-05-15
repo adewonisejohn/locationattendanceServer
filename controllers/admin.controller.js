@@ -19,6 +19,9 @@ router.post('/start', async (req, res) => {
         // Extract latitude, longitude, course code, and distance from request body
         const { latitude, longitude, course_code, distance } = req.body;
 
+
+        console.log(req.body)
+
         // Update the admin's attendance status, location, course code, and distance
         await Admin.updateOne({}, {
             attendance_in_progress: true,
