@@ -20,7 +20,7 @@ router.post('/start', async (req, res) => {
         const { latitude, longitude, course_code, distance } = req.body;
 
 
-        console.log(req.body)
+        console.log
 
         // Update the admin's attendance status, location, course code, and distance
         await Admin.updateOne({}, {

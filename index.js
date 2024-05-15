@@ -58,6 +58,30 @@ app.get('/attendance/download/:fileName', (req, res) => {
   });
 });
 
+
+// Route to delete a specific file
+app.post('/attendance/delete/:fileName', (req, res) => {
+  const fileName = req.params.fileName;
+  const filePath = path.join(__dirname, 'public', 'attendanceList', fileName);
+
+  // Check if the file exists
+  fs.exists(filePath, (exists) => {
+      if (exists) {
+          // Delete the file
+          fs.unlink(filePath, (err) => {
+              if (err) {
+                  console.error('Error deleting file:', err);
+                  res.status(500).send('Internal server error');
+              } else {
+                  res.redirect('/attendance');
+              }
+          });
+      } else {
+          res.status(404).send('File not found');
+      }
+  });
+});
+
 app.use("/signin", signInController);
 app.use("/signup", signUpController);
 app.use("/admin", adminController);
