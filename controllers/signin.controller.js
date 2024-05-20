@@ -7,10 +7,8 @@ router.use(express.json());
 router.use(express.urlencoded({ extended: true }));
 const fs = require('fs');
 const path = require('path');
-const { Parser } = require('json2csv');
-const moment = require('moment')
+const moment = require('moment');
 const ExcelJS = require('exceljs');
-
 
 // Function to calculate distance between two points using Haversine formula
 function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -26,7 +24,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return distance;
 }
 
-
 router.post("/student", async (req, res) => {
     try {
         const { matric_number, password, course_code, longitude, latitude } = req.body;
@@ -39,15 +36,11 @@ router.post("/student", async (req, res) => {
         const student = await UserModel.findOne({ matric_number });
         const admin = await AdminModel.findOne(); // Assuming there's only one admin
 
-        if (admin.attendance_in_progress === undefined) {
+        if (!admin.attendance_in_progress) {
             return res.status(401).json({ status: false, message: "Attendance has not started" });
         }
 
-        if (admin.course_code === undefined) {
-            return res.status(401).json({ status: false, message: "Attendance has not started" });
-        }
-
-        if (admin.attendance_in_progress === false) {
+        if (!admin.course_code) {
             return res.status(401).json({ status: false, message: "Attendance has not started" });
         }
 
@@ -81,9 +74,9 @@ router.post("/student", async (req, res) => {
         const filePath = path.join(directoryPath, fileName);
 
         // Load or create the workbook
-        let workbook;
+        let workbook = new ExcelJS.Workbook();
         if (fs.existsSync(filePath)) {
-            workbook = await ExcelJS.Workbook.xlsx.readFile(filePath);
+            await workbook.xlsx.readFile(filePath);
         } else {
             workbook = new ExcelJS.Workbook();
         }
@@ -109,8 +102,6 @@ router.post("/student", async (req, res) => {
         res.status(500).json({ status: false, message: "Internal server error" });
     }
 });
-
-
 
 // Admin Sign-in Route
 router.post("/admin", async (req, res) => {
