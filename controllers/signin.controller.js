@@ -27,7 +27,6 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 
-
 router.post("/student", async (req, res) => {
     try {
         const { matric_number, password, course_code, longitude, latitude } = req.body;
@@ -40,19 +39,16 @@ router.post("/student", async (req, res) => {
         const student = await UserModel.findOne({ matric_number });
         const admin = await AdminModel.findOne(); // Assuming there's only one admin
 
-
-        if (admin.attendance_in_progress == undefined) {
-            return res.status(401).json({ status: false, message: "Attendance has not started " })
+        if (admin.attendance_in_progress === undefined) {
+            return res.status(401).json({ status: false, message: "Attendance has not started" });
         }
 
-        if (admin.course_code == undefined) {
-            return res.status(401).json({ status: false, message: "Attendance has not tarted" })
+        if (admin.course_code === undefined) {
+            return res.status(401).json({ status: false, message: "Attendance has not started" });
         }
 
-
-
-        if (admin.attendance_in_progress == false) {
-            return res.status(401).json({ status: false, message: "Attendance has not started " })
+        if (admin.attendance_in_progress === false) {
+            return res.status(401).json({ status: false, message: "Attendance has not started" });
         }
 
         // If student is not found or password is incorrect
@@ -60,25 +56,14 @@ router.post("/student", async (req, res) => {
             return res.status(401).json({ status: false, message: "Invalid matric number or password" });
         }
 
-        // If student is found and password is correct
         // Compare the distance between student's location and admin's location
         const distance = calculateDistance(studentLatitude, studentLongitude, admin.location[0], admin.location[1]);
 
-        // You can define a threshold distance and check if the student is within that distance from the admin
-        const thresholdDistance = admin.distance; // Threshold distance in kilometers
+        // Threshold distance in kilometers
+        const thresholdDistance = admin.distance;
         if (distance > thresholdDistance) {
             return res.status(401).json({ status: false, message: "You are not within the allowed distance to sign in" });
         }
-
-        // If student is within the allowed distance, create Excel workbook with student information
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Attendance');
-
-        // Add headers
-        worksheet.addRow(['Full Name', 'Matric Number', 'Department']);
-
-        // Add data
-        worksheet.addRow([student.full_name, matric_number, student.department]);
 
         // Generate file name based on admin's course code and current date
         const currentDate = moment().format('DD-MM-YYYY');
@@ -95,17 +80,35 @@ router.post("/student", async (req, res) => {
         // Define the file path
         const filePath = path.join(directoryPath, fileName);
 
+        // Load or create the workbook
+        let workbook;
+        if (fs.existsSync(filePath)) {
+            workbook = await ExcelJS.Workbook.xlsx.readFile(filePath);
+        } else {
+            workbook = new ExcelJS.Workbook();
+        }
+
+        // Get or create the worksheet
+        let worksheet = workbook.getWorksheet('Attendance');
+        if (!worksheet) {
+            worksheet = workbook.addWorksheet('Attendance');
+            // Add headers if this is a new worksheet
+            worksheet.addRow(['Full Name', 'Matric Number', 'Department', 'Level']);
+        }
+
+        // Add student data
+        worksheet.addRow([student.full_name, matric_number, student.department, student.level]);
+
         // Save the Excel file
         await workbook.xlsx.writeFile(filePath);
 
-        // If student is within the allowed distance
+        // Respond to the client
         res.status(200).json({ status: true, message: "Student signed in successfully", student });
     } catch (error) {
         console.error("Error signing in student:", error.message);
         res.status(500).json({ status: false, message: "Internal server error" });
     }
 });
-
 
 
 
